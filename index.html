@@ -86,6 +86,38 @@
             font-size: 32px;
             line-height: 1;
         }
+        #messageDisplay {
+            min-height: 40px;
+            width: 300px;
+            text-align: center;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            background-color: #ffeeba; /* Light yellow for messages */
+            border: 1px solid #ffc107; /* Orange border */
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        #messageDisplay.success {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        #messageDisplay.error {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        #messageDisplay.info {
+            background-color: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
     </style>
 </head>
 <body>
@@ -104,6 +136,7 @@
             <button id="runProgramButton">Run Program</button>
             <button id="resetFieldButton">Reset Field</button>
         </div>
+        <div id="messageDisplay">Welcome! Guide the robot.</div>
     </div>
 
     <script>
@@ -130,6 +163,7 @@
             let collectedSuns = []; // To track collected suns
 
             const programDisplay = document.getElementById('programDisplay');
+            const messageDisplay = document.getElementById('messageDisplay'); // New message display element
             const program = []; // Stores the robot's program
 
             // UI Elements
@@ -171,6 +205,13 @@
                 return { x: x, y: y };
             }
 
+            // New function to display messages
+            function displayMessage(message, type = 'info') {
+                messageDisplay.textContent = message;
+                messageDisplay.className = ''; // Clear previous classes
+                messageDisplay.classList.add(type); // Add new type class for styling
+            }
+
             function initGame() {
                 const occupiedCells = [];
                 startPos = chooseUniquePos(occupiedCells);
@@ -184,6 +225,7 @@
                 collectedSuns = []; // Reset collected suns
                 clearProgram(); // Clear any existing program
                 drawGame();
+                displayMessage("Ready to play! Build your program. 🚀", 'info');
             }
 
             function drawGrid() {
@@ -243,11 +285,13 @@
             function addInstruction(instruction) {
                 program.push(instruction);
                 updateProgramDisplay();
+                displayMessage("Instruction added! ✨", 'info');
             }
 
             function clearProgram() {
                 program.length = 0; // Clear the array
                 updateProgramDisplay();
+                displayMessage("Program cleared! 🧹", 'info');
             }
 
             function updateProgramDisplay() {
@@ -265,6 +309,9 @@
             }
 
             async function runProgram() {
+                // Clear message display at the start of a run
+                displayMessage("Robot is moving... 🤖", 'info');
+
                 // Disable buttons during animation
                 document.querySelectorAll('.controls button').forEach(btn => btn.disabled = true);
 
@@ -292,6 +339,8 @@
                                 currentRobotPos.x = nextX;
                                 currentRobotPos.y = nextY;
                                 moved = true;
+                            } else {
+                                displayMessage("Oops! Hit the wall! 🧱", 'error');
                             }
                             break;
                         case 'LEFT':
@@ -305,26 +354,35 @@
 
                     // Check for meteor collision
                     if (currentRobotPos.x === meteorPos.x && currentRobotPos.y === meteorPos.y) {
-                        alert("Oh no! You hit the meteor! Game Over.");
-                        break; // Stop program execution
+                        displayMessage("Oh no! You hit the meteor! 💥 Game Over.", 'error');
+                        document.querySelectorAll('.controls button').forEach(btn => btn.disabled = false);
+                        return; // Stop program execution
                     }
 
                     // Check for sun collection
                     if (!collectedSuns.includes('sun1') && currentRobotPos.x === sunPos1.x && currentRobotPos.y === sunPos1.y) {
                         collectedSuns.push('sun1');
-                        alert("Collected a sun!");
+                        displayMessage("Собрал солнышко! ☀️", 'success');
                     }
                     if (!collectedSuns.includes('sun2') && currentRobotPos.x === sunPos2.x && currentRobotPos.y === sunPos2.y) {
                         collectedSuns.push('sun2');
-                        alert("Collected a sun!");
+                        displayMessage("Собрал солнышко! ☀️", 'success');
                     }
 
                     // Check for win condition
                     if (currentRobotPos.x === finishPos.x && currentRobotPos.y === finishPos.y && collectedSuns.length === 2) {
-                        alert("Congratulations! You reached the red flag and collected both suns!");
-                        break; // Stop program execution
+                        displayMessage("🎉 Поздравляю! Ты добрался до красного флажка и собрал оба солнышка! Ты победил! 🎉", 'success');
+                        document.querySelectorAll('.controls button').forEach(btn => btn.disabled = false);
+                        return; // Stop program execution
                     }
                 }
+                // If program finishes without winning or hitting meteor
+                if (currentRobotPos.x === finishPos.x && currentRobotPos.y === finishPos.y) {
+                    displayMessage(`Ты добрался до красного флажка, но собрал только ${collectedSuns.length} из двух солнышек. Попробуй ещё! 🧐`, 'info');
+                } else {
+                    displayMessage("Программа закончилась. Program finished. Not quite there yet! Try again. 🤔", 'info');
+                }
+
                 document.querySelectorAll('.controls button').forEach(btn => btn.disabled = false); // Re-enable buttons
             }
         });
