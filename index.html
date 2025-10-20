@@ -5,6 +5,7 @@
     <style>
         body {
             display: flex;
+            flex-direction: column; /* Changed to column to stack canvas and button */
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -14,16 +15,32 @@
         canvas {
             border: 2px solid #333;
             background-color: #fff;
+            margin-bottom: 20px; /* Add some space below the canvas */
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
     <canvas id="myGridCanvas" width="400" height="400"></canvas>
+    <button id="downloadPngButton">Download as PNG</button>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const canvas = document.getElementById('myGridCanvas');
             const ctx = canvas.getContext('2d');
+            const downloadButton = document.getElementById('downloadPngButton');
 
             const gridSize = 4; // 4x4 grid
             const cellSize = canvas.width / gridSize; // Calculate cell size based on canvas width
@@ -46,7 +63,7 @@
                     x = Math.floor(Math.random() * gridSize);
                     y = Math.floor(Math.random() * gridSize);
                     id = `${x}-${y}`;
-                } while (usedCells.indexOf(id) != -1);
+                } while (usedCells.includes(id));
                 usedCells.push(id);
                 return [x, y];
             }
@@ -92,6 +109,17 @@
             drawImageInCell(sunPos1[0], sunPos1[1], sun);
             drawImageInCell(sunPos2[0], sunPos2[1], sun);
             drawImageInCell(meteorPos[0], meteorPos[1], meteor);
+
+            // Event listener for the download button
+            downloadButton.addEventListener('click', function() {
+                const image = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = 'grid-canvas.png';
+                link.href = image;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
         });
     </script>
 </body>
