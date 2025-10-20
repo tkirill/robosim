@@ -121,7 +121,7 @@
     </style>
 </head>
 <body>
-    <h1>Robot Path Game</h1>
+    <h1>Игра с роботом</h1>
     <canvas id="myGridCanvas" width="400" height="400"></canvas>
 
     <div class="controls">
@@ -129,14 +129,14 @@
             <button id="upArrow">⬆️</button>
             <button id="leftArrow">⬅️</button>
             <button id="rightArrow">➡️</button>
-            <button id="clearProgram">Clear</button>
+            <button id="clearProgram">Очистить</button>
         </div>
         <div id="programDisplay"></div>
         <div class="action-buttons">
-            <button id="runProgramButton">Run Program</button>
-            <button id="resetFieldButton">Reset Field</button>
+            <button id="runProgramButton">Запустить программу</button>
+            <button id="resetFieldButton">Сбросить поле</button>
         </div>
-        <div id="messageDisplay">Welcome! Guide the robot.</div>
+        <div id="messageDisplay">Добро пожаловать! Управляй роботом.</div>
     </div>
 
     <script>
@@ -156,7 +156,7 @@
                 flagRed: './flag_red100.jpg',
                 meteor: './meteor100.png',
                 sun: './sun.jpg',
-                robot: './robot.png'
+                robot: './robot.png' // Changed to robot.png
             };
 
             let startPos, finishPos, sunPos1, sunPos2, meteorPos;
@@ -225,7 +225,7 @@
                 collectedSuns = []; // Reset collected suns
                 clearProgram(); // Clear any existing program
                 drawGame();
-                displayMessage("Ready to play! Build your program. 🚀", 'info');
+                displayMessage("Готов к игре! Построй свою программу. 🚀", 'info');
             }
 
             function drawGrid() {
@@ -285,13 +285,13 @@
             function addInstruction(instruction) {
                 program.push(instruction);
                 updateProgramDisplay();
-                displayMessage("Instruction added! ✨", 'info');
+                displayMessage("Инструкция добавлена! ✨", 'info');
             }
 
             function clearProgram() {
                 program.length = 0; // Clear the array
                 updateProgramDisplay();
-                displayMessage("Program cleared! 🧹", 'info');
+                displayMessage("Программа очищена! 🧹", 'info');
             }
 
             function updateProgramDisplay() {
@@ -301,8 +301,8 @@
                     span.classList.add('program-instruction');
                     switch (inst) {
                         case 'UP': span.textContent = '⬆️'; break;
-                        case 'LEFT': span.textContent = '⬅️'; break;
-                        case 'RIGHT': span.textContent = '➡️'; break;
+                        case 'LEFT': span.textContent = '⬅️'; break; // Changed to ⬅️
+                        case 'RIGHT': span.textContent = '➡️'; break; // Changed to ➡️
                     }
                     programDisplay.appendChild(span);
                 });
@@ -310,7 +310,7 @@
 
             async function runProgram() {
                 // Clear message display at the start of a run
-                displayMessage("Robot is moving... 🤖", 'info');
+                displayMessage("Робот движется... 🤖", 'info');
 
                 // Disable buttons during animation
                 document.querySelectorAll('.controls button').forEach(btn => btn.disabled = true);
@@ -340,7 +340,7 @@
                                 currentRobotPos.y = nextY;
                                 moved = true;
                             } else {
-                                displayMessage("Oops! Hit the wall! 🧱", 'error');
+                                displayMessage("Ой! Уперся в стену! 🧱", 'error');
                             }
                             break;
                         case 'LEFT':
@@ -354,7 +354,7 @@
 
                     // Check for meteor collision
                     if (currentRobotPos.x === meteorPos.x && currentRobotPos.y === meteorPos.y) {
-                        displayMessage("Oh no! You hit the meteor! 💥 Game Over.", 'error');
+                        displayMessage("О нет! Ты столкнулся с метеоритом! 💥 Конец игры.", 'error');
                         document.querySelectorAll('.controls button').forEach(btn => btn.disabled = false);
                         return; // Stop program execution
                     }
@@ -371,16 +371,16 @@
 
                     // Check for win condition
                     if (currentRobotPos.x === finishPos.x && currentRobotPos.y === finishPos.y && collectedSuns.length === 2) {
-                        displayMessage("🎉 Поздравляю! Ты добрался до красного флажка и собрал оба солнышка! Ты победил! 🎉", 'success');
+                        displayMessage("🎉 Поздравляем! Ты дошел до красного флага и собрал оба солнышка! Ты выиграл! 🎉", 'success');
                         document.querySelectorAll('.controls button').forEach(btn => btn.disabled = false);
                         return; // Stop program execution
                     }
                 }
                 // If program finishes without winning or hitting meteor
                 if (currentRobotPos.x === finishPos.x && currentRobotPos.y === finishPos.y) {
-                    displayMessage(`Ты добрался до красного флажка, но собрал только ${collectedSuns.length} из двух солнышек. Попробуй ещё! 🧐`, 'info');
+                    displayMessage(`Ты дошел до красного флага, но собрал только ${collectedSuns.length} из 2 солнышек. Попробуй еще! 🧐`, 'info');
                 } else {
-                    displayMessage("Программа закончилась. Program finished. Not quite there yet! Try again. 🤔", 'info');
+                    displayMessage("Программа завершена. Пока не достиг цели! Попробуй снова. 🤔", 'info');
                 }
 
                 document.querySelectorAll('.controls button').forEach(btn => btn.disabled = false); // Re-enable buttons
