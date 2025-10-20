@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>4x4 Grid on Canvas</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myGridCanvas" width="400" height="400"></canvas>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('myGridCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const gridSize = 4; // 4x4 grid
+            const cellSize = canvas.width / gridSize; // Calculate cell size based on canvas width
+
+            const usedCells = [];
+
+            const startPos = chooseUniquePos();
+            const finishPos = chooseUniquePos();
+            const sunPos1 = chooseUniquePos();
+            const sunPos2 = chooseUniquePos();
+            const meteorPos = chooseUniquePos();
+            const meteor = loadImage('./meteor100.png');
+            const flagGreen = loadImage('./flag_green100.jpg');
+            const flagRed = loadImage('./flag_red100.jpg');
+            const sun = loadImage('./sun.jpg');
+
+            function chooseUniquePos() {
+                let x = 0, y = 0, id = '';
+                do {
+                    x = Math.floor(Math.random() * gridSize);
+                    y = Math.floor(Math.random() * gridSize);
+                    id = `${x}-${y}`;
+                } while (usedCells.indexOf(id) != -1);
+                usedCells.push(id);
+                return [x, y];
+            }
+
+            function loadImage(src) {
+                const img = new Image();
+                img.src = src;
+                return img;
+            }
+
+            // Function to draw the grid
+            function drawGrid() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+                // Draw vertical lines
+                for (let i = 0; i <= gridSize; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * cellSize, 0);
+                    ctx.lineTo(i * cellSize, canvas.height);
+                    ctx.stroke();
+                }
+
+                // Draw horizontal lines
+                for (let i = 0; i <= gridSize; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i * cellSize);
+                    ctx.lineTo(canvas.width, i * cellSize);
+                    ctx.stroke();
+                }
+            }
+
+            // Function to draw a simple meteor in a specific cell
+            function drawImageInCell(row, col, image) {
+                const x = col * cellSize + 10;
+                const y = row * cellSize + 10;
+                ctx.drawImage(image, x, y, 80, 80);
+            }
+
+            // Draw the initial grid
+            drawGrid();
+            drawImageInCell(startPos[0], startPos[1], flagGreen);
+            drawImageInCell(finishPos[0], finishPos[1], flagRed);
+            drawImageInCell(sunPos1[0], sunPos1[1], sun);
+            drawImageInCell(sunPos2[0], sunPos2[1], sun);
+            drawImageInCell(meteorPos[0], meteorPos[1], meteor);
+        });
+    </script>
+</body>
+</html>
