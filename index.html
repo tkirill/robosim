@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Robot Pathfinding Game</title>
+    <meta charset="utf-8"> <!-- Added UTF-8 meta tag -->
+    <title>Игра с роботом</title>
     <style>
         body {
             display: flex;
@@ -156,7 +156,7 @@
                 flagRed: './flag_red100.jpg',
                 meteor: './meteor100.png',
                 sun: './sun.jpg',
-                robot: './robot.png' // Changed to robot.png
+                robot: './robot.png'
             };
 
             let startPos, finishPos, sunPos1, sunPos2, meteorPos;
@@ -272,10 +272,11 @@
                 drawImageInCell(finishPos, images.flagRed);
                 drawImageInCell(meteorPos, images.meteor);
 
-                if (!collectedSuns.includes('sun1')) {
+                // Only draw suns if they haven't been collected
+                if (!collectedSuns.includes('sun1_id')) { // Use unique IDs for collected suns
                     drawImageInCell(sunPos1, images.sun);
                 }
-                if (!collectedSuns.includes('sun2')) {
+                if (!collectedSuns.includes('sun2_id')) {
                     drawImageInCell(sunPos2, images.sun);
                 }
 
@@ -301,8 +302,8 @@
                     span.classList.add('program-instruction');
                     switch (inst) {
                         case 'UP': span.textContent = '⬆️'; break;
-                        case 'LEFT': span.textContent = '⬅️'; break; // Changed to ⬅️
-                        case 'RIGHT': span.textContent = '➡️'; break; // Changed to ➡️
+                        case 'LEFT': span.textContent = '⬅️'; break;
+                        case 'RIGHT': span.textContent = '➡️'; break;
                     }
                     programDisplay.appendChild(span);
                 });
@@ -360,14 +361,25 @@
                     }
 
                     // Check for sun collection
-                    if (!collectedSuns.includes('sun1') && currentRobotPos.x === sunPos1.x && currentRobotPos.y === sunPos1.y) {
-                        collectedSuns.push('sun1');
-                        displayMessage("Собрал солнышко! ☀️", 'success');
+                    // Check sun 1
+                    if (currentRobotPos.x === sunPos1.x && currentRobotPos.y === sunPos1.y && !collectedSuns.includes('sun1_id')) {
+                        collectedSuns.push('sun1_id');
+                        if (collectedSuns.length === 1) {
+                            displayMessage("Ты собрал первое солнышко! ✨ Осталось одно! ☀️", 'success');
+                        } else { // This implies it's the second sun collected, regardless of which "sun object" it is
+                            displayMessage("Отлично! Ты собрал второе солнышко! 🌟", 'success');
+                        }
                     }
-                    if (!collectedSuns.includes('sun2') && currentRobotPos.x === sunPos2.x && currentRobotPos.y === sunPos2.y) {
-                        collectedSuns.push('sun2');
-                        displayMessage("Собрал солнышко! ☀️", 'success');
+                    // Check sun 2
+                    if (currentRobotPos.x === sunPos2.x && currentRobotPos.y === sunPos2.y && !collectedSuns.includes('sun2_id')) {
+                        collectedSuns.push('sun2_id');
+                        if (collectedSuns.length === 1) {
+                            displayMessage("Ты собрал первое солнышко! ✨ Осталось одно! ☀️", 'success');
+                        } else { // This implies it's the second sun collected
+                            displayMessage("Отлично! Ты собрал второе солнышко! 🌟", 'success');
+                        }
                     }
+
 
                     // Check for win condition
                     if (currentRobotPos.x === finishPos.x && currentRobotPos.y === finishPos.y && collectedSuns.length === 2) {
