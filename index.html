@@ -1,92 +1,198 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>4x4 Grid on Canvas</title>
+    <meta charset="UTF-8">
+    <title>Robot Pathfinding Game</title>
     <style>
         body {
             display: flex;
-            flex-direction: column; /* Changed to column to stack canvas and button */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
         }
         canvas {
             border: 2px solid #333;
             background-color: #fff;
-            margin-bottom: 20px; /* Add some space below the canvas */
+            margin-bottom: 20px;
         }
-        button {
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .program-input {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .program-input button {
+            background-color: #6c757d; /* Grey for program buttons */
+            font-size: 24px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .program-input button:hover {
+            background-color: #5a6268;
+        }
+        .action-buttons button {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
-            background-color: #007bff;
+            border-radius: 5px;
             color: white;
             border: none;
-            border-radius: 5px;
             transition: background-color 0.3s ease;
+            margin: 0 5px;
         }
-        button:hover {
-            background-color: #0056b3;
+        #runProgramButton {
+            background-color: #28a745; /* Green for run */
+        }
+        #runProgramButton:hover {
+            background-color: #218838;
+        }
+        #resetFieldButton {
+            background-color: #dc3545; /* Red for reset */
+        }
+        #resetFieldButton:hover {
+            background-color: #c82333;
+        }
+        #programDisplay {
+            min-height: 30px;
+            border: 1px solid #ccc;
+            width: 300px;
+            text-align: center;
+            padding: 5px;
+            box-sizing: border-box;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .program-instruction {
+            font-size: 20px;
         }
     </style>
 </head>
 <body>
+    <h1>Robot Path Game</h1>
     <canvas id="myGridCanvas" width="400" height="400"></canvas>
-    <button id="downloadPngButton">Download as PNG</button>
+
+    <div class="controls">
+        <div class="program-input">
+            <button id="upArrow">⬆️</button>
+            <button id="leftArrow">⬅️</button>
+            <button id="rightArrow">➡️</button>
+            <button id="clearProgram">Clear</button>
+        </div>
+        <div id="programDisplay"></div>
+        <div class="action-buttons">
+            <button id="runProgramButton">Run Program</button>
+            <button id="resetFieldButton">Reset Field</button>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const canvas = document.getElementById('myGridCanvas');
             const ctx = canvas.getContext('2d');
-            const downloadButton = document.getElementById('downloadPngButton');
 
-            const gridSize = 4; // 4x4 grid
-            const cellSize = canvas.width / gridSize; // Calculate cell size based on canvas width
+            const gridSize = 4;
+            const cellSize = canvas.width / gridSize;
 
-            const usedCells = [];
+            let currentRobotPos = { x: 0, y: 0 };
+            let robotDirection = 0; // 0: up, 1: right, 2: down, 3: left (clockwise)
 
-            const startPos = chooseUniquePos();
-            const finishPos = chooseUniquePos();
-            const sunPos1 = chooseUniquePos();
-            const sunPos2 = chooseUniquePos();
-            const meteorPos = chooseUniquePos();
-            const meteor = loadImage('./meteor100.png');
-            const flagGreen = loadImage('./flag_green100.jpg');
-            const flagRed = loadImage('./flag_red100.jpg');
-            const sun = loadImage('./sun.jpg');
+            const images = {};
+            const imagePaths = {
+                flagGreen: './flag_green100.jpg',
+                flagRed: './flag_red100.jpg',
+                meteor: './meteor100.png',
+                sun: './sun.jpg',
+                robot: './robot.png'
+            };
 
-            function chooseUniquePos() {
+            let startPos, finishPos, sunPos1, sunPos2, meteorPos;
+            let collectedSuns = []; // To track collected suns
+
+            const programDisplay = document.getElementById('programDisplay');
+            const program = []; // Stores the robot's program
+
+            // UI Elements
+            document.getElementById('upArrow').addEventListener('click', () => addInstruction('UP'));
+            document.getElementById('leftArrow').addEventListener('click', () => addInstruction('LEFT'));
+            document.getElementById('rightArrow').addEventListener('click', () => addInstruction('RIGHT'));
+            document.getElementById('clearProgram').addEventListener('click', clearProgram);
+            document.getElementById('runProgramButton').addEventListener('click', runProgram);
+            document.getElementById('resetFieldButton').addEventListener('click', initGame);
+
+            // Load all images
+            let imagesLoadedCount = 0;
+            const totalImages = Object.keys(imagePaths).length;
+
+            function loadImage(name, src) {
+                const img = new Image();
+                img.src = src;
+                img.onload = () => {
+                    images[name] = img;
+                    imagesLoadedCount++;
+                    if (imagesLoadedCount === totalImages) {
+                        initGame(); // Initialize game once all images are loaded
+                    }
+                };
+            }
+
+            for (const name in imagePaths) {
+                loadImage(name, imagePaths[name]);
+            }
+
+            function chooseUniquePos(occupiedCells) {
                 let x = 0, y = 0, id = '';
                 do {
                     x = Math.floor(Math.random() * gridSize);
                     y = Math.floor(Math.random() * gridSize);
                     id = `${x}-${y}`;
-                } while (usedCells.includes(id));
-                usedCells.push(id);
-                return [x, y];
+                } while (occupiedCells.includes(id));
+                occupiedCells.push(id);
+                return { x: x, y: y };
             }
 
-            function loadImage(src) {
-                const img = new Image();
-                img.src = src;
-                return img;
+            function initGame() {
+                const occupiedCells = [];
+                startPos = chooseUniquePos(occupiedCells);
+                finishPos = chooseUniquePos(occupiedCells);
+                sunPos1 = chooseUniquePos(occupiedCells);
+                sunPos2 = chooseUniquePos(occupiedCells);
+                meteorPos = chooseUniquePos(occupiedCells);
+
+                currentRobotPos = { ...startPos }; // Start robot at the green flag
+                robotDirection = 0; // Robot starts facing up
+                collectedSuns = []; // Reset collected suns
+                clearProgram(); // Clear any existing program
+                drawGame();
             }
 
-            // Function to draw the grid
             function drawGrid() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-
-                // Draw vertical lines
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i <= gridSize; i++) {
                     ctx.beginPath();
                     ctx.moveTo(i * cellSize, 0);
                     ctx.lineTo(i * cellSize, canvas.height);
                     ctx.stroke();
                 }
-
-                // Draw horizontal lines
                 for (let i = 0; i <= gridSize; i++) {
                     ctx.beginPath();
                     ctx.moveTo(0, i * cellSize);
@@ -95,31 +201,131 @@
                 }
             }
 
-            // Function to draw a simple meteor in a specific cell
-            function drawImageInCell(row, col, image) {
-                const x = col * cellSize + 10;
-                const y = row * cellSize + 10;
-                ctx.drawImage(image, x, y, 80, 80);
+            function drawImageInCell(pos, image, size = 80) {
+                const x = pos.x * cellSize + (cellSize - size) / 2;
+                const y = pos.y * cellSize + (cellSize - size) / 2;
+                if (image) {
+                    ctx.drawImage(image, x, y, size, size);
+                }
             }
 
-            // Draw the initial grid
-            drawGrid();
-            drawImageInCell(startPos[0], startPos[1], flagGreen);
-            drawImageInCell(finishPos[0], finishPos[1], flagRed);
-            drawImageInCell(sunPos1[0], sunPos1[1], sun);
-            drawImageInCell(sunPos2[0], sunPos2[1], sun);
-            drawImageInCell(meteorPos[0], meteorPos[1], meteor);
+            function drawRobot() {
+                if (!images.robot) return;
 
-            // Event listener for the download button
-            downloadButton.addEventListener('click', function() {
-                const image = canvas.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = 'grid-canvas.png';
-                link.href = image;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            });
+                const robotSize = 80;
+                const x = currentRobotPos.x * cellSize + cellSize / 2;
+                const y = currentRobotPos.y * cellSize + cellSize / 2;
+
+                ctx.save(); // Save the current canvas state
+                ctx.translate(x, y); // Move canvas origin to robot's center
+                ctx.rotate(robotDirection * Math.PI / 2); // Rotate based on direction (0:up, 1:right, 2:down, 3:left)
+                ctx.drawImage(images.robot, -robotSize / 2, -robotSize / 2, robotSize, robotSize);
+                ctx.restore(); // Restore the canvas state
+            }
+
+            function drawGame() {
+                drawGrid();
+                drawImageInCell(startPos, images.flagGreen);
+                drawImageInCell(finishPos, images.flagRed);
+                drawImageInCell(meteorPos, images.meteor);
+
+                if (!collectedSuns.includes('sun1')) {
+                    drawImageInCell(sunPos1, images.sun);
+                }
+                if (!collectedSuns.includes('sun2')) {
+                    drawImageInCell(sunPos2, images.sun);
+                }
+
+                drawRobot();
+            }
+
+            function addInstruction(instruction) {
+                program.push(instruction);
+                updateProgramDisplay();
+            }
+
+            function clearProgram() {
+                program.length = 0; // Clear the array
+                updateProgramDisplay();
+            }
+
+            function updateProgramDisplay() {
+                programDisplay.innerHTML = '';
+                program.forEach(inst => {
+                    const span = document.createElement('span');
+                    span.classList.add('program-instruction');
+                    switch (inst) {
+                        case 'UP': span.textContent = '⬆️'; break;
+                        case 'LEFT': span.textContent = '⬅️'; break;
+                        case 'RIGHT': span.textContent = '➡️'; break;
+                    }
+                    programDisplay.appendChild(span);
+                });
+            }
+
+            async function runProgram() {
+                // Disable buttons during animation
+                document.querySelectorAll('.controls button').forEach(btn => btn.disabled = true);
+
+                currentRobotPos = { ...startPos }; // Reset robot to start
+                robotDirection = 0; // Reset direction
+                collectedSuns = []; // Reset collected suns
+                drawGame(); // Redraw initial state
+
+                for (let i = 0; i < program.length; i++) {
+                    const instruction = program[i];
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Pause for animation
+
+                    let moved = false;
+                    switch (instruction) {
+                        case 'UP':
+                            let nextX = currentRobotPos.x;
+                            let nextY = currentRobotPos.y;
+                            if (robotDirection === 0) nextY--; // Up
+                            else if (robotDirection === 1) nextX++; // Right
+                            else if (robotDirection === 2) nextY++; // Down
+                            else if (robotDirection === 3) nextX--; // Left
+
+                            // Check boundaries
+                            if (nextX >= 0 && nextX < gridSize && nextY >= 0 && nextY < gridSize) {
+                                currentRobotPos.x = nextX;
+                                currentRobotPos.y = nextY;
+                                moved = true;
+                            }
+                            break;
+                        case 'LEFT':
+                            robotDirection = (robotDirection + 3) % 4; // Turn counter-clockwise
+                            break;
+                        case 'RIGHT':
+                            robotDirection = (robotDirection + 1) % 4; // Turn clockwise
+                            break;
+                    }
+                    drawGame(); // Redraw game state after each step
+
+                    // Check for meteor collision
+                    if (currentRobotPos.x === meteorPos.x && currentRobotPos.y === meteorPos.y) {
+                        alert("Oh no! You hit the meteor! Game Over.");
+                        break; // Stop program execution
+                    }
+
+                    // Check for sun collection
+                    if (!collectedSuns.includes('sun1') && currentRobotPos.x === sunPos1.x && currentRobotPos.y === sunPos1.y) {
+                        collectedSuns.push('sun1');
+                        alert("Collected a sun!");
+                    }
+                    if (!collectedSuns.includes('sun2') && currentRobotPos.x === sunPos2.x && currentRobotPos.y === sunPos2.y) {
+                        collectedSuns.push('sun2');
+                        alert("Collected a sun!");
+                    }
+
+                    // Check for win condition
+                    if (currentRobotPos.x === finishPos.x && currentRobotPos.y === finishPos.y && collectedSuns.length === 2) {
+                        alert("Congratulations! You reached the red flag and collected both suns!");
+                        break; // Stop program execution
+                    }
+                }
+                document.querySelectorAll('.controls button').forEach(btn => btn.disabled = false); // Re-enable buttons
+            }
         });
     </script>
 </body>
