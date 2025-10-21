@@ -342,6 +342,8 @@
                                 moved = true;
                             } else {
                                 displayMessage("Ой! Уперся в стену! 🧱", 'error');
+                                document.querySelectorAll('.controls button').forEach(btn => btn.disabled = false);
+                                return; // Stop program execution immediately
                             }
                             break;
                         case 'LEFT':
